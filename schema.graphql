@@ -1,0 +1,36 @@
+scalar DateTime
+
+enum TaskMutation {
+    CREATED
+    UPDATED
+    DELETED
+}
+
+type TaskSubscriptionPayload {
+    mutation: TaskMutation!
+    task: Task!
+}
+
+type Task {
+    id: ID!
+    name: String!
+    date: DateTime!
+    complete: Boolean!
+}
+
+type Query {
+    tasks: [Task]
+    tasksOnDay(day: DateTime!): [Task]
+}
+
+type Mutation {
+    createTask(name: String!): Task!
+    updateTask(id: ID!, name: String!, date: DateTime!, complete: Boolean!): Task!
+    moveTask(id: ID!, date: DateTime!): Task!
+    completeTask(id: ID!, complete: Boolean!): Task!
+    deleteTask(id: ID!): Boolean!
+}
+
+type Subscription {
+    taskData: TaskSubscriptionPayload!
+}

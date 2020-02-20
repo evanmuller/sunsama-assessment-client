@@ -1,20 +1,16 @@
-import React, { useEffect } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { GRAPHQL_URL } from "react-native-dotenv";
+import React, {useState} from "react";
+import moment from "moment";
+import ClientProvider from "./ClientProvider";
+import DayView from "./DayView";
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
+const App = () => {
+  const [day] = useState(moment.utc().toDate());
 
-export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>GraphQL URL: {GRAPHQL_URL}</Text>
-    </View>
+    <ClientProvider>
+      <DayView day={day}/>
+    </ClientProvider>
   );
-}
+};
+
+export default App;
