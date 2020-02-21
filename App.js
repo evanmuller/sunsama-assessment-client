@@ -1,14 +1,16 @@
-import React, {useState} from "react";
-import moment from "moment";
+import React, { useState } from "react";
+import { DateTime } from "luxon";
 import ClientProvider from "./ClientProvider";
 import DayView from "./DayView";
 
 const App = () => {
-  const [day] = useState(moment.utc().toDate());
+  const [dateTime] = useState(
+    DateTime.local().setZone("utc", { keepLocalTime: true }),
+  ); // Pretend we're in Greenwich for now...
 
   return (
     <ClientProvider>
-      <DayView day={day}/>
+      <DayView currentDateTime={dateTime} />
     </ClientProvider>
   );
 };
