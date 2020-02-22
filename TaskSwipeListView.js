@@ -1,4 +1,8 @@
 import React, { useMemo, useState, useRef } from "react";
+import FontAwesome, {
+  RegularIcons,
+  SolidIcons,
+} from "react-native-fontawesome";
 import { assoc } from "ramda";
 import {
   StyleSheet,
@@ -9,6 +13,7 @@ import {
   Platform,
 } from "react-native";
 import { SwipeListView } from "react-native-swipe-list-view";
+import MyAppText from "./MyAppText";
 
 const moveColor = "rgb(44, 167, 255)";
 const deleteColor = "rgb(251, 74, 74)";
@@ -18,7 +23,6 @@ const styles = StyleSheet.create({
     color: "#FFF",
   },
   rowFront: {
-    alignItems: "center",
     backgroundColor: "white",
     borderRadius: 4,
     justifyContent: "center",
@@ -32,6 +36,8 @@ const styles = StyleSheet.create({
         elevation: 1,
       },
     }),
+
+    padding: 20,
 
     marginTop: 4,
     marginBottom: 4,
@@ -54,8 +60,7 @@ const styles = StyleSheet.create({
   },
   rowFrontText: {
     fontSize: 14,
-    // fontFamily: `Avenir, "Helvetica Neue", Helvetica, Arial, sans-serif`,
-    fontFamily: "sans-serif",
+    marginBottom: 10,
   },
   rowBackText: {
     color: "white",
@@ -100,7 +105,18 @@ const TaskSwipeListView = ({ data, onMove, onDelete, onPress }) => {
           onPress={() => onPress(item)}
         >
           <View style={styles.rowFront}>
-            <Text style={styles.rowFrontText}>{item.name}</Text>
+            <MyAppText style={styles.rowFrontText}>{item.name}</MyAppText>
+            {item.complete ? (
+              <FontAwesome
+                icon={SolidIcons.checkCircle}
+                style={{ fontSize: 20 }}
+              />
+            ) : (
+              <FontAwesome
+                icon={RegularIcons.checkCircle}
+                style={{ fontSize: 20 }}
+              />
+            )}
           </View>
         </TouchableHighlight>
       )}
