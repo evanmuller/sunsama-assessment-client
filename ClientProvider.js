@@ -8,11 +8,8 @@ import { getMainDefinition } from "apollo-utilities";
 import { ApolloProvider } from "react-apollo";
 import { API_HTTP_URL, API_WS_URL } from "react-native-dotenv";
 
-// react-native-dotenv is buggy. It's not populating env vars w/o the comments below.
+// react-native-dotenv is buggy. It's not populating env vars w/o the console.log statements comments below.
 // TODO: find a better solution
-// API_HTTP_URL
-// API_WS_URL
-
 console.log("API_HTTP_URL", API_HTTP_URL);
 console.log("API_WS_URL", API_WS_URL);
 

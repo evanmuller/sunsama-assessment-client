@@ -1,9 +1,14 @@
 import React, { useCallback, useEffect } from "react";
 import { indexOf, pluck, remove, lensIndex, set, sort } from "ramda";
 import { DateTime } from "luxon";
-import { FlatList, StyleSheet, Text, View } from "react-native";
-import { useQuery } from "@apollo/react-hooks";
-import { tasksOnDayQuery, taskOnDaySubscription } from "./queries";
+import { StyleSheet, Text, View } from "react-native";
+import { useMutation, useQuery } from "@apollo/react-hooks";
+import TaskSwipeListView from "./TaskSwipeListView";
+import {
+  deleteTaskMutation,
+  tasksOnDayQuery,
+  taskDataSubscription,
+} from "./queries";
 
 const sortTasks = sort((taskA, taskB) => {
   if (taskA.complete === taskB.complete) {
@@ -78,23 +83,13 @@ const updateTasksForNewSubscriptionData = (
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  list: {
-    width: "100%",
+    backgroundColor: "#f7f8fa",
   },
   dateLabel: {
     fontSize: 20,
-  },
-  item: {
-    flex: 1,
-    margin: 4,
-    backgroundColor: "#eee",
-    padding: 10,
-    fontSize: 12,
-    textAlign: "center",
+    marginTop: 80,
+    marginBottom: 40,
+    marginLeft: 20,
   },
 });
 
@@ -105,10 +100,12 @@ const DayView = ({ currentDateTime }) => {
     },
   });
 
+  const [deleteTask] = useMutation(deleteTaskMutation);
+
   const subscribeToMoreTasks = useCallback(
     () => {
       subscribeToMore({
-        document: taskOnDaySubscription,
+        document: taskDataSubscription,
         variables: { day: currentDateTime.toISO() },
         updateQuery: (prev, { subscriptionData }) => {
           if (subscriptionData.data) {
@@ -125,7 +122,7 @@ const DayView = ({ currentDateTime }) => {
         },
       });
     },
-    [subscribeToMore, taskOnDaySubscription, currentDateTime],
+    [subscribeToMore, taskDataSubscription, currentDateTime],
   );
 
   useEffect(
@@ -145,15 +142,15 @@ const DayView = ({ currentDateTime }) => {
       ) : error ? (
         <Text>{error.message}</Text>
       ) : (
-        <FlatList
+        <TaskSwipeListView
           data={sortTasks(data.tasksOnDay)}
-          style={styles.list}
-          renderItem={({ item }) => (
-            <Text style={styles.item}>
-              {item.name} ⇨ {item.date} ⇨ {item.id} ⇨{" "}
-              {item.complete ? "Complete" : "Not Done"}
-            </Text>
-          )}
+          onPress={task => console.log("on press task", task)}
+          onMove={task => console.log("on move task", task)}
+          onDelete={(task, rowRef) => {
+            deleteTask({ variables: { id: task.id } }).then(() => {
+              rowRef.closeRowWithoutAnimation();
+            });
+          }}
         />
       )}
     </View>

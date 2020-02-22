@@ -22,7 +22,13 @@ export const tasksOnDayQuery = gql`
   }
 `;
 
-export const taskOnDaySubscription = gql`
+export const deleteTaskMutation = gql`
+  mutation($id: ID!) {
+    deleteTask(id: $id)
+  }
+`;
+
+export const taskDataSubscription = gql`
   subscription {
     taskData {
       mutation
