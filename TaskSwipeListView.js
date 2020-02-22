@@ -9,14 +9,15 @@ import {
   Text,
   View,
   Dimensions,
-  TouchableHighlight,
+  TouchableWithoutFeedback,
   Platform,
 } from "react-native";
-import { SwipeListView } from "react-native-swipe-list-view";
+import { SwipeListView, SwipeRow } from "react-native-swipe-list-view";
 import MyAppText from "./MyAppText";
 
 const moveColor = "rgb(44, 167, 255)";
 const deleteColor = "rgb(251, 74, 74)";
+const completeColor = "rgb(77, 205, 125)";
 
 const styles = StyleSheet.create({
   backTextWhite: {
@@ -26,7 +27,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderRadius: 4,
     justifyContent: "center",
-    height: 70,
+    height: 100,
 
     ...Platform.select({
       web: {
@@ -59,15 +60,30 @@ const styles = StyleSheet.create({
     marginRight: 20,
   },
   rowFrontText: {
-    fontSize: 14,
-    marginBottom: 10,
+    fontSize: 16,
+    marginBottom: 16,
+  },
+  actionRow: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "flex-start",
   },
   rowBackText: {
     color: "white",
   },
+  completeCheck: {
+    fontSize: 28,
+    color: completeColor,
+    flex: 0,
+  },
+  incompleteCheck: {
+    fontSize: 28,
+    color: "rgba(0, 0, 0, .3)",
+    flex: 0,
+  },
 });
 
-const TaskSwipeListView = ({ data, onMove, onDelete, onPress }) => {
+const TaskSwipeListView = ({ data, onMove, onDelete, onPress, onComplete }) => {
   const [swipeDirection, setSwipeDirection] = useState({});
 
   const rowMapRef = useRef();
@@ -93,73 +109,80 @@ const TaskSwipeListView = ({ data, onMove, onDelete, onPress }) => {
           onDelete(task, rowRef);
         }
       }}
-      onSwipeValueChange={({ value, key }) => {
-        const direction = value > 0 ? "right" : "left";
-        if (swipeDirection[key] !== direction) {
-          setSwipeDirection(assoc(key, direction, swipeDirection));
-        }
-      }}
-      renderItem={({ item }) => (
-        <TouchableHighlight
-          underlayColor="#f7f8fa"
-          onPress={() => onPress(item)}
-        >
-          <View style={styles.rowFront}>
-            <MyAppText style={styles.rowFrontText}>{item.name}</MyAppText>
-            {item.complete ? (
-              <FontAwesome
-                icon={SolidIcons.checkCircle}
-                style={{ fontSize: 20 }}
-              />
-            ) : (
-              <FontAwesome
-                icon={RegularIcons.checkCircle}
-                style={{ fontSize: 20 }}
-              />
-            )}
-          </View>
-        </TouchableHighlight>
-      )}
-      renderHiddenItem={({ item }, rowMap) => {
+      renderItem={({ item }, rowMap) => {
         rowMapRef.current = rowMap;
 
         return (
-          <View
-            style={[
-              styles.rowBack,
-              {
-                backgroundColor:
-                  swipeDirection[item.key] === "right"
-                    ? moveColor
-                    : deleteColor,
-              },
-            ]}
+          <SwipeRow
+            leftOpenValue={Dimensions.get("window").width}
+            rightOpenValue={-Dimensions.get("window").width}
+            disableRightSwipe={item.complete}
+            disableLeftSwipe={item.complete}
+            onSwipeValueChange={({ value }) => {
+              const direction = value > 0 ? "right" : "left";
+              if (swipeDirection[item.key] !== direction) {
+                setSwipeDirection(assoc(item.key, direction, swipeDirection));
+              }
+            }}
           >
-            <Text
+            <View
               style={[
-                styles.rowBackText,
+                styles.rowBack,
                 {
-                  opacity: swipeDirection[item.key] === "right" ? 1 : 0,
+                  backgroundColor:
+                    swipeDirection[item.key] === "right"
+                      ? moveColor
+                      : deleteColor,
                 },
+                item.complete ? { opacity: 0 } : { opacity: 1 },
               ]}
             >
-              Move
-            </Text>
-            <Text
-              style={[
-                styles.rowBackText,
-                {
-                  opacity: swipeDirection[item.key] === "left" ? 1 : 0,
-                },
-              ]}
-            >
-              Delete
-            </Text>
-          </View>
+              <Text
+                style={[
+                  styles.rowBackText,
+                  {
+                    opacity: swipeDirection[item.key] === "right" ? 1 : 0,
+                  },
+                ]}
+              >
+                Move
+              </Text>
+              <Text
+                style={[
+                  styles.rowBackText,
+                  {
+                    opacity: swipeDirection[item.key] === "left" ? 1 : 0,
+                  },
+                ]}
+              >
+                Delete
+              </Text>
+            </View>
+            <TouchableWithoutFeedback onPress={() => onPress(item)}>
+              <View
+                style={[styles.rowFront, item.complete ? { opacity: 0.6 } : {}]}
+              >
+                <MyAppText style={styles.rowFrontText}>{item.name}</MyAppText>
+                <View style={styles.actionRow}>
+                  <TouchableWithoutFeedback onPress={() => onComplete(item)}>
+                    {item.complete ? (
+                      <FontAwesome
+                        icon={SolidIcons.checkCircle}
+                        style={styles.completeCheck}
+                      />
+                    ) : (
+                      <FontAwesome
+                        icon={RegularIcons.checkCircle}
+                        style={styles.incompleteCheck}
+                      />
+                    )}
+                  </TouchableWithoutFeedback>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </SwipeRow>
         );
       }}
-      leftOpenValue={Dimensions.get("window").width}
-      rightOpenValue={-Dimensions.get("window").width}
     />
   );
 };

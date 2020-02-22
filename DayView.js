@@ -6,8 +6,9 @@ import { useMutation, useQuery } from "@apollo/react-hooks";
 import TaskSwipeListView from "./TaskSwipeListView";
 import {
   deleteTaskMutation,
-  tasksOnDayQuery,
   taskDataSubscription,
+  tasksOnDayQuery,
+  updateTaskMutation,
 } from "./queries";
 
 const sortTasks = sort((taskA, taskB) => {
@@ -101,6 +102,7 @@ const DayView = ({ currentDateTime }) => {
   });
 
   const [deleteTask] = useMutation(deleteTaskMutation);
+  const [updateTask] = useMutation(updateTaskMutation);
 
   const subscribeToMoreTasks = useCallback(
     () => {
@@ -149,6 +151,11 @@ const DayView = ({ currentDateTime }) => {
           onDelete={(task, rowRef) => {
             deleteTask({ variables: { id: task.id } }).then(() => {
               rowRef.closeRowWithoutAnimation();
+            });
+          }}
+          onComplete={task => {
+            updateTask({
+              variables: { id: task.id, complete: !task.complete },
             });
           }}
         />
