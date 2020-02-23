@@ -1,14 +1,24 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useState, useEffect, useRef } from "react";
 import { indexOf, pluck, remove, lensIndex, set, sort } from "ramda";
 import { DateTime } from "luxon";
-import { StyleSheet, Text, View } from "react-native";
-import { useMutation, useQuery } from "@apollo/react-hooks";
-import TaskSwipeListView from "./TaskSwipeListView";
 import {
-  deleteTaskMutation,
-  taskDataSubscription,
-  tasksOnDayQuery,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableWithoutFeedback,
+  View,
+  TextInput,
+} from "react-native";
+import { useMutation, useQuery } from "@apollo/react-hooks";
+import FontAwesome, { RegularIcons } from "react-native-fontawesome";
+import TaskSwipeListView from "./TaskSwipeListView";
+import MyAppText from "./MyAppText";
+import {
+  createTaskMutation,
   updateTaskMutation,
+  deleteTaskMutation,
+  tasksOnDayQuery,
+  taskDataSubscription,
 } from "./queries";
 
 const sortTasks = sort((taskA, taskB) => {
@@ -92,39 +102,134 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     marginLeft: 20,
   },
+  addTaskButton: {
+    backgroundColor: "white",
+    borderRadius: 4,
+
+    ...Platform.select({
+      web: {
+        boxShadow: "0 1px 1px 1px rgba(0,0,0,.1)",
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
+
+    padding: 20,
+
+    marginTop: 4,
+    marginBottom: 4,
+    marginLeft: 20,
+    marginRight: 20,
+  },
+  newTask: {
+    display: "flex",
+
+    backgroundColor: "white",
+    borderRadius: 4,
+
+    ...Platform.select({
+      web: {
+        boxShadow: "0 1px 1px 1px rgba(0,0,0,.1)",
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
+
+    padding: 20,
+
+    marginTop: 4,
+    marginBottom: 4,
+    marginLeft: 20,
+    marginRight: 20,
+  },
+  newTaskNameInput: {
+    fontFamily: "Avenir",
+    marginBottom: 16,
+    fontSize: 16,
+    padding: 0,
+  },
+  addTaskText: {
+    fontSize: 16,
+    color: "rgba(0, 0, 0, .6)",
+  },
+  incompleteCheck: {
+    fontSize: 32, // this should be 42 at a minimum, but it looks bad
+    color: "rgba(0, 0, 0, .3)",
+    flex: 0,
+  },
 });
 
 const DayView = ({ currentDateTime }) => {
+  const [creatingTask, setCreatingTask] = useState(false);
+  const newTaskNameInputRef = useRef(null);
+  const newTaskPending = useRef(false);
+
+  const [createTask] = useMutation(createTaskMutation);
+  const [updateTask] = useMutation(updateTaskMutation);
+  const [deleteTask] = useMutation(deleteTaskMutation);
+
   const { data, loading, error, subscribeToMore } = useQuery(tasksOnDayQuery, {
     variables: {
       day: currentDateTime.toISO(),
     },
   });
 
-  const [deleteTask] = useMutation(deleteTaskMutation);
-  const [updateTask] = useMutation(updateTaskMutation);
-
   const subscribeToMoreTasks = useCallback(
     () => {
-      subscribeToMore({
-        document: taskDataSubscription,
-        variables: { day: currentDateTime.toISO() },
-        updateQuery: (prev, { subscriptionData }) => {
-          if (subscriptionData.data) {
-            return {
-              tasksOnDay: updateTasksForNewSubscriptionData(
-                subscriptionData.data.taskData,
-                currentDateTime,
-                prev.tasksOnDay,
-              ),
-            };
-          }
+      if (subscribeToMore) {
+        subscribeToMore({
+          document: taskDataSubscription,
+          variables: { day: currentDateTime.toISO() },
+          updateQuery: (prev, { subscriptionData }) => {
+            if (subscriptionData.data) {
+              // Don't shut an open new task input on another device
+              // But do it here so there's no lag. There's a better way to do this.
+              if (newTaskPending.current) {
+                setCreatingTask(false);
+                newTaskPending.current = false;
+              }
 
-          return prev;
-        },
-      });
+              return {
+                tasksOnDay: updateTasksForNewSubscriptionData(
+                  subscriptionData.data.taskData,
+                  currentDateTime,
+                  prev.tasksOnDay,
+                ),
+              };
+            }
+
+            return prev;
+          },
+        });
+      }
     },
     [subscribeToMore, taskDataSubscription, currentDateTime],
+  );
+
+  const handleCreateTask = useCallback(
+    value => {
+      const now = DateTime.local().setZone("utc", {
+        keepLocalTime: true,
+      }); // stay in Greenwich for now...
+
+      const newTaskDateTime = now.set({
+        day: currentDateTime.get("day"),
+        month: currentDateTime.get("month"),
+        year: currentDateTime.get("year"),
+      });
+
+      newTaskPending.current = true;
+
+      //TODO: handle errors
+      createTask({
+        variables: { name: value, date: newTaskDateTime.toISO() },
+      }).then(response => {
+        console.log("Task Created", response);
+      });
+    },
+    [setCreatingTask, currentDateTime],
   );
 
   useEffect(
@@ -134,31 +239,82 @@ const DayView = ({ currentDateTime }) => {
     [subscribeToMoreTasks],
   );
 
+  useEffect(
+    () => {
+      if (creatingTask) {
+        newTaskNameInputRef.current.focus();
+      }
+    },
+    [creatingTask, newTaskNameInputRef],
+  );
+
   return (
     <View style={styles.container}>
-      <Text style={styles.dateLabel}>
+      <MyAppText style={styles.dateLabel}>
         {currentDateTime.toFormat("EEEE, MMMM d")}
-      </Text>
+      </MyAppText>
       {loading ? (
         <Text>Loading...</Text>
       ) : error ? (
         <Text>{error.message}</Text>
       ) : (
-        <TaskSwipeListView
-          data={sortTasks(data.tasksOnDay)}
-          onPress={task => console.log("on press task", task)}
-          onMove={task => console.log("on move task", task)}
-          onDelete={(task, rowRef) => {
-            deleteTask({ variables: { id: task.id } }).then(() => {
-              rowRef.closeRowWithoutAnimation();
-            });
-          }}
-          onComplete={task => {
-            updateTask({
-              variables: { id: task.id, complete: !task.complete },
-            });
-          }}
-        />
+        <View>
+          <TouchableWithoutFeedback onPress={() => setCreatingTask(true)}>
+            <View style={styles.addTaskButton}>
+              <MyAppText style={styles.addTaskText}>Add a task</MyAppText>
+            </View>
+          </TouchableWithoutFeedback>
+
+          {creatingTask && (
+            <View style={styles.newTask}>
+              <TextInput
+                style={styles.newTaskNameInput}
+                ref={newTaskNameInputRef}
+                returnKeyType="done"
+                placeholder="Task description..."
+                onEndEditing={({ nativeEvent }) => {
+                  if (nativeEvent.text) {
+                    handleCreateTask(nativeEvent.text);
+                  } else {
+                    setCreatingTask(false);
+                  }
+                }}
+                onBlur={({ target }) => {
+                  if (target.value) {
+                    handleCreateTask(target.value);
+                  } else {
+                    setCreatingTask(false);
+                  }
+                }}
+              />
+              <FontAwesome
+                icon={RegularIcons.checkCircle}
+                style={styles.incompleteCheck}
+              />
+            </View>
+          )}
+
+          <TaskSwipeListView
+            data={sortTasks(data.tasksOnDay)}
+            onPress={task => console.log("on press task", task)}
+            onMove={task => console.log("on move task", task)}
+            onDelete={(task, rowRef) => {
+              //TODO: handle errors
+              deleteTask({ variables: { id: task.id } }).then(response => {
+                console.log("Task Deleted", response);
+                rowRef.closeRowWithoutAnimation();
+              });
+            }}
+            onComplete={task => {
+              //TODO: handle errors
+              updateTask({
+                variables: { id: task.id, complete: !task.complete },
+              }).then(response => {
+                console.log("Task Updated", response);
+              });
+            }}
+          />
+        </View>
       )}
     </View>
   );

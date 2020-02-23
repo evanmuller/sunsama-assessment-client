@@ -26,9 +26,11 @@ export const tasksOnDayQuery = gql`
   }
 `;
 
-export const deleteTaskMutation = gql`
-  mutation($id: ID!) {
-    deleteTask(id: $id)
+export const createTaskMutation = gql`
+  mutation($name: String, $date: DateTime!) {
+    createTask(name: $name, date: $date) {
+      id
+    }
   }
 `;
 
@@ -51,6 +53,12 @@ export const updateTaskMutation = gql`
     ) {
       id
     }
+  }
+`;
+
+export const deleteTaskMutation = gql`
+  mutation($id: ID!) {
+    deleteTask(id: $id)
   }
 `;
 

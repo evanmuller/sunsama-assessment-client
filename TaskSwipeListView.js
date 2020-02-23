@@ -27,7 +27,6 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderRadius: 4,
     justifyContent: "center",
-    height: 100,
 
     ...Platform.select({
       web: {
@@ -54,8 +53,8 @@ const styles = StyleSheet.create({
     paddingLeft: 15,
     paddingRight: 15,
     borderRadius: 5,
-    marginTop: 4,
-    marginBottom: 4,
+    marginTop: 5,
+    marginBottom: 5,
     marginLeft: 20,
     marginRight: 20,
   },
@@ -72,12 +71,12 @@ const styles = StyleSheet.create({
     color: "white",
   },
   completeCheck: {
-    fontSize: 28,
+    fontSize: 32, // this should be 42 at a minimum, but it looks bad
     color: completeColor,
     flex: 0,
   },
   incompleteCheck: {
-    fontSize: 28,
+    fontSize: 32, // this should be 42 at a minimum, but it looks bad
     color: "rgba(0, 0, 0, .3)",
     flex: 0,
   },
@@ -86,7 +85,7 @@ const styles = StyleSheet.create({
 const TaskSwipeListView = ({ data, onMove, onDelete, onPress, onComplete }) => {
   const [swipeDirection, setSwipeDirection] = useState({});
 
-  const rowMapRef = useRef();
+  const rowMapRef = useRef(null);
 
   const dataWithKey = useMemo(
     () => data.map((task, index) => assoc("key", `${index}`, task)),
