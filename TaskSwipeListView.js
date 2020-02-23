@@ -113,6 +113,8 @@ const TaskSwipeListView = ({ data, onMove, onDelete, onPress, onComplete }) => {
 
         return (
           <SwipeRow
+            tension={120}
+            friction={14}
             leftOpenValue={Dimensions.get("window").width}
             rightOpenValue={-Dimensions.get("window").width}
             disableRightSwipe={item.complete}
