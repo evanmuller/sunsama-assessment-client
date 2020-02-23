@@ -280,10 +280,12 @@ const DayView = ({ currentDateTime }) => {
                   }
                 }}
                 onBlur={({ target }) => {
-                  if (target.value) {
-                    handleCreateTask(target.value);
-                  } else {
-                    setCreatingTask(false);
+                  if (Platform.OS === "web") {
+                    if (target.value) {
+                      handleCreateTask(target.value);
+                    } else {
+                      setCreatingTask(false);
+                    }
                   }
                 }}
               />
