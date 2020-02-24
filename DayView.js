@@ -22,6 +22,7 @@ import CalendarMiniMap from "./CalendarMiniMap";
 import DateHeader from "./DateHeader";
 import MyAppText from "./MyAppText";
 import TaskSwipeListView from "./TaskSwipeListView";
+import MoveTaskOverlay from "./MoveTaskOverlay";
 
 const sortTasks = sort((taskA, taskB) => {
   if (taskA.complete === taskB.complete) {
@@ -163,8 +164,10 @@ const styles = StyleSheet.create({
 const DayView = ({ currentDateTime, onDateTimeChange }) => {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [creatingTask, setCreatingTask] = useState(false);
+  const [movingTask, setMovingTask] = useState(null);
   const newTaskNameInputRef = useRef(null);
   const newTaskPending = useRef(false);
+  const moveTaskRowRef = useRef(null);
 
   const [createTask] = useMutation(createTaskMutation);
   const [updateTask] = useMutation(updateTaskMutation);
@@ -323,7 +326,10 @@ const DayView = ({ currentDateTime, onDateTimeChange }) => {
           <TaskSwipeListView
             data={sortTasks(data.tasksOnDay)}
             onPress={task => console.log("on press task", task)}
-            onMove={task => console.log("on move task", task)}
+            onMove={(task, rowRef) => {
+              moveTaskRowRef.current = rowRef;
+              setMovingTask(task);
+            }}
             onDelete={(task, rowRef) => {
               //TODO: handle errors
               deleteTask({ variables: { id: task.id } }).then(response => {
@@ -341,6 +347,27 @@ const DayView = ({ currentDateTime, onDateTimeChange }) => {
             }}
           />
         </>
+      )}
+
+      {movingTask && (
+        <MoveTaskOverlay
+          currentDateTime={currentDateTime}
+          onDateTimeChange={dateTime => {
+            //TODO: handle errors
+            updateTask({
+              variables: { id: movingTask.id, date: dateTime.toISO() },
+            }).then(response => {
+              console.log("Task Moved", response);
+            });
+
+            moveTaskRowRef.current.closeRowWithoutAnimation();
+            setMovingTask(null);
+          }}
+          onClose={() => {
+            moveTaskRowRef.current.closeRowWithoutAnimation();
+            setMovingTask(null);
+          }}
+        />
       )}
     </View>
   );
