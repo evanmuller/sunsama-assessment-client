@@ -24,23 +24,25 @@ const styles = StyleSheet.create({
     marginLeft: 40,
     fontSize: 12,
   },
+  closeArea: {
+    flex: 1,
+  },
 });
 
 const MoveTaskOverlay = ({ currentDateTime, onDateTimeChange, onClose }) => {
   return (
-    <TouchableWithoutFeedback
-      onPress={onClose}
-    >
-      <View style={styles.container}>
-        <View style={styles.calendarContainer}>
-          <MyAppText style={styles.startDateText}>Start date:</MyAppText>
-          <CalendarMiniMap
-            selectedDateTime={currentDateTime}
-            onDateTimeChange={onDateTimeChange}
-          />
-        </View>
+    <View style={styles.container}>
+      <TouchableWithoutFeedback onPress={onClose}>
+        <View style={styles.closeArea} />
+      </TouchableWithoutFeedback>
+      <View style={styles.calendarContainer}>
+        <MyAppText style={styles.startDateText}>Start date:</MyAppText>
+        <CalendarMiniMap
+          selectedDateTime={currentDateTime}
+          onDateTimeChange={onDateTimeChange}
+        />
       </View>
-    </TouchableWithoutFeedback>
+    </View>
   );
 };
 
