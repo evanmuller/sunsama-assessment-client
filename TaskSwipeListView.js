@@ -94,7 +94,6 @@ const TaskSwipeListView = ({ data, onMove, onDelete, onPress, onComplete }) => {
 
   return (
     <SwipeListView
-      useFlatList
       closeOnRowOpen={false}
       closeOnRowPress={false}
       data={dataWithKey}

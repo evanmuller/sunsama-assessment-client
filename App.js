@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import * as Font from "expo-font";
 import { DateTime } from "luxon";
-import { Text } from "react-native";
+import { View } from "react-native";
 import ClientProvider from "./ClientProvider";
 import DayView from "./DayView";
 
 const App = () => {
-  const [dateTime] = useState(
+  const [dateTime, setDateTime] = useState(
     DateTime.local().setZone("utc", { keepLocalTime: true }),
   ); // Pretend we're in Greenwich for now...
 
@@ -17,6 +17,7 @@ const App = () => {
       "fa-regular-400": require("./assets/fonts/fa-regular-400.ttf"),
       "fa-solid-900": require("./assets/fonts/fa-solid-900.ttf"),
       Avenir: require("./assets/fonts/AvenirLTStd-Book.otf"),
+      AvenirMedium: require("./assets/fonts/AvenirLTStd-Medium.otf"),
     }).then(() => {
       setFontsLoaded(true);
     });
@@ -24,10 +25,13 @@ const App = () => {
 
   return fontsLoaded ? (
     <ClientProvider>
-      <DayView currentDateTime={dateTime} />
+      <DayView
+        currentDateTime={dateTime}
+        onDateTimeChange={dateTime => setDateTime(dateTime)}
+      />
     </ClientProvider>
   ) : (
-    <Text>Loading Fonts...</Text>
+    <View/> // use empty view for loading for now
   );
 };
 

@@ -1,5 +1,4 @@
 import React, { useCallback, useState, useEffect, useRef } from "react";
-import { indexOf, pluck, remove, lensIndex, set, sort } from "ramda";
 import { DateTime } from "luxon";
 import {
   Platform,
@@ -9,10 +8,8 @@ import {
   View,
   TextInput,
 } from "react-native";
+import { indexOf, pluck, remove, lensIndex, set, sort } from "ramda";
 import { useMutation, useQuery } from "@apollo/react-hooks";
-import FontAwesome, { RegularIcons } from "react-native-fontawesome";
-import TaskSwipeListView from "./TaskSwipeListView";
-import MyAppText from "./MyAppText";
 import {
   createTaskMutation,
   updateTaskMutation,
@@ -20,6 +17,11 @@ import {
   tasksOnDayQuery,
   taskDataSubscription,
 } from "./queries";
+import FontAwesome, { RegularIcons } from "react-native-fontawesome";
+import CalendarMiniMap from "./CalendarMiniMap";
+import DateHeader from "./DateHeader";
+import MyAppText from "./MyAppText";
+import TaskSwipeListView from "./TaskSwipeListView";
 
 const sortTasks = sort((taskA, taskB) => {
   if (taskA.complete === taskB.complete) {
@@ -96,12 +98,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f7f8fa",
   },
-  dateLabel: {
-    fontSize: 20,
-    marginTop: 80,
-    marginBottom: 40,
-    marginLeft: 20,
-  },
   addTaskButton: {
     backgroundColor: "white",
     borderRadius: 4,
@@ -159,9 +155,13 @@ const styles = StyleSheet.create({
     color: "rgba(0, 0, 0, .3)",
     flex: 0,
   },
+  calendarMiniMap: {
+    marginBottom: 6,
+  },
 });
 
-const DayView = ({ currentDateTime }) => {
+const DayView = ({ currentDateTime, onDateTimeChange }) => {
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [creatingTask, setCreatingTask] = useState(false);
   const newTaskNameInputRef = useRef(null);
   const newTaskPending = useRef(false);
@@ -170,41 +170,52 @@ const DayView = ({ currentDateTime }) => {
   const [updateTask] = useMutation(updateTaskMutation);
   const [deleteTask] = useMutation(deleteTaskMutation);
 
-  const { data, loading, error, subscribeToMore } = useQuery(tasksOnDayQuery, {
-    variables: {
-      day: currentDateTime.toISO(),
+  const { data, loading, error, subscribeToMore, refetch } = useQuery(
+    tasksOnDayQuery,
+    {
+      variables: {
+        day: currentDateTime.toISO(),
+      },
     },
-  });
+  );
+
+  // This is a little wonky. We have to refetch if the date changes
+  // because another client may have changed the tasks and we didn't
+  // catch it in subscription data.
+  useEffect(
+    () => {
+      refetch();
+    },
+    [currentDateTime],
+  );
 
   const subscribeToMoreTasks = useCallback(
-    () => {
-      if (subscribeToMore) {
-        subscribeToMore({
-          document: taskDataSubscription,
-          variables: { day: currentDateTime.toISO() },
-          updateQuery: (prev, { subscriptionData }) => {
-            if (subscriptionData.data) {
-              // Don't shut an open new task input on another device
-              // But do it here so there's no lag. There's a better way to do this.
-              if (newTaskPending.current) {
-                setCreatingTask(false);
-                newTaskPending.current = false;
-              }
+    () =>
+      subscribeToMore({
+        document: taskDataSubscription,
+        variables: { day: currentDateTime.toISO() },
+        updateQuery: (prev, { subscriptionData }) => {
+          if (subscriptionData.data) {
+            // Don't shut an open new task input on another device
+            // But do it here so there's no lag. There's a better way to do this.
 
-              return {
-                tasksOnDay: updateTasksForNewSubscriptionData(
-                  subscriptionData.data.taskData,
-                  currentDateTime,
-                  prev.tasksOnDay,
-                ),
-              };
+            if (newTaskPending.current) {
+              setCreatingTask(false);
+              newTaskPending.current = false;
             }
 
-            return prev;
-          },
-        });
-      }
-    },
+            return {
+              tasksOnDay: updateTasksForNewSubscriptionData(
+                subscriptionData.data.taskData,
+                currentDateTime,
+                prev.tasksOnDay,
+              ),
+            };
+          }
+
+          return prev;
+        },
+      }),
     [subscribeToMore, taskDataSubscription, currentDateTime],
   );
 
@@ -233,9 +244,7 @@ const DayView = ({ currentDateTime }) => {
   );
 
   useEffect(
-    () => {
-      subscribeToMoreTasks();
-    },
+    () => subscribeToMoreTasks(), // need the return value to unsubscribe
     [subscribeToMoreTasks],
   );
 
@@ -250,15 +259,30 @@ const DayView = ({ currentDateTime }) => {
 
   return (
     <View style={styles.container}>
-      <MyAppText style={styles.dateLabel}>
-        {currentDateTime.toFormat("EEEE, MMMM d")}
-      </MyAppText>
+      <DateHeader
+        open={calendarOpen}
+        selectedDateTime={currentDateTime}
+        onPress={() => {
+          setCalendarOpen(!calendarOpen);
+        }}
+      />
       {loading ? (
-        <Text>Loading...</Text>
+        <View /> // use empty view for loading for now
       ) : error ? (
         <Text>{error.message}</Text>
       ) : (
-        <View>
+        <>
+          {calendarOpen && (
+            <CalendarMiniMap
+              style={styles.calendarMiniMap}
+              selectedDateTime={currentDateTime}
+              onDateTimeChange={dateTime => {
+                setCalendarOpen(false);
+                onDateTimeChange(dateTime);
+              }}
+            />
+          )}
+
           <TouchableWithoutFeedback onPress={() => setCreatingTask(true)}>
             <View style={styles.addTaskButton}>
               <MyAppText style={styles.addTaskText}>Add a task</MyAppText>
@@ -316,7 +340,7 @@ const DayView = ({ currentDateTime }) => {
               });
             }}
           />
-        </View>
+        </>
       )}
     </View>
   );
