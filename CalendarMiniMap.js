@@ -21,11 +21,7 @@ const CalendarMiniMap = ({ selectedDateTime, onDateTimeChange, ...props }) => {
       pagingEnabled={true}
       calendarWidth={Dimensions.get("window").width}
       onDayPress={({ year, month, day }) => {
-        onDateTimeChange(
-          DateTime.fromObject({ year, month, day }).setZone("utc", {
-            keepLocalTime: true,
-          }), // Stay in Greenwich for now...
-        );
+        onDateTimeChange(DateTime.fromObject({ year, month, day }));
       }}
       hideExtraDays={false}
       markedDates={{

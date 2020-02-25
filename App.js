@@ -6,9 +6,7 @@ import ClientProvider from "./ClientProvider";
 import DayView from "./DayView";
 
 const App = () => {
-  const [dateTime, setDateTime] = useState(
-    DateTime.local().setZone("utc", { keepLocalTime: true }),
-  ); // Pretend we're in Greenwich for now...
+  const [dateTime, setDateTime] = useState(DateTime.local());
 
   const [fontsLoaded, setFontsLoaded] = useState(false);
 
