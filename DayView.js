@@ -214,9 +214,7 @@ const DayView = ({ currentDateTime, onDateTimeChange }) => {
 
   const handleCreateTask = useCallback(
     value => {
-      const now = DateTime.local().setZone("utc", {
-        keepLocalTime: true,
-      }); // stay in Greenwich for now...
+      const now = DateTime.local();
 
       const newTaskDateTime = now.set({
         day: currentDateTime.get("day"),
