@@ -6,13 +6,10 @@ import { HttpLink } from "apollo-link-http";
 import { WebSocketLink } from "apollo-link-ws";
 import { getMainDefinition } from "apollo-utilities";
 import { ApolloProvider } from "react-apollo";
-import { API_HTTP_URL, API_WS_URL } from "react-native-dotenv";
 
-// react-native-dotenv is buggy. It's not populating env vars w/o the comments below.
-// TODO: find a better solution
-// API_HTTP_URL
-// API_WS_URL
-
+// TODO: find a .env solution because react-native-dotenv is not working
+const API_HTTP_URL = "https://sunsama-assessment-server.herokuapp.com/";
+const API_WS_URL = "wss://sunsama-assessment-server.herokuapp.com/";
 console.log("API_HTTP_URL", API_HTTP_URL);
 console.log("API_WS_URL", API_WS_URL);
 

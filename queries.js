@@ -7,6 +7,8 @@ export const tasksQuery = gql`
       name
       date
       complete
+      notes
+      timeAllotment
     }
   }
 `;
@@ -18,11 +20,59 @@ export const tasksOnDayQuery = gql`
       name
       date
       complete
+      notes
+      timeAllotment
     }
   }
 `;
 
-export const taskOnDaySubscription = gql`
+export const createTaskMutation = gql`
+  mutation($name: String!, $date: DateTime!) {
+    createTask(name: $name, date: $date) {
+      id
+      name
+      date
+      complete
+      notes
+      timeAllotment
+    }
+  }
+`;
+
+export const updateTaskMutation = gql`
+  mutation(
+    $id: ID!
+    $name: String
+    $date: DateTime
+    $complete: Boolean
+    $notes: String
+    $timeAllotment: Duration
+  ) {
+    updateTask(
+      id: $id
+      name: $name
+      date: $date
+      complete: $complete
+      notes: $notes
+      timeAllotment: $timeAllotment
+    ) {
+      id
+      name
+      date
+      complete
+      notes
+      timeAllotment
+    }
+  }
+`;
+
+export const deleteTaskMutation = gql`
+  mutation($id: ID!) {
+    deleteTask(id: $id)
+  }
+`;
+
+export const taskDataSubscription = gql`
   subscription {
     taskData {
       mutation
@@ -31,6 +81,8 @@ export const taskOnDaySubscription = gql`
         name
         date
         complete
+        notes
+        timeAllotment
       }
     }
   }
