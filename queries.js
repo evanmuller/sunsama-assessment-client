@@ -27,7 +27,7 @@ export const tasksOnDayQuery = gql`
 `;
 
 export const createTaskMutation = gql`
-  mutation($name: String, $date: DateTime!) {
+  mutation($name: String!, $date: DateTime!) {
     createTask(name: $name, date: $date) {
       id
       name
