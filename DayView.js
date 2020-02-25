@@ -110,6 +110,11 @@ const styles = StyleSheet.create({
       android: {
         elevation: 1,
       },
+      ios: {
+        shadowOffset: { width: 1, height: 1 },
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+      },
     }),
 
     padding: 20,
@@ -131,6 +136,11 @@ const styles = StyleSheet.create({
       },
       android: {
         elevation: 1,
+      },
+      ios: {
+        shadowOffset: { width: 1, height: 1 },
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
       },
     }),
 
