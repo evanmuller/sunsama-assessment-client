@@ -399,6 +399,7 @@ const DayView = ({ currentDateTime, onDateTimeChange }) => {
 
       {movingTask && (
         <MoveTaskOverlay
+          task={movingTask}
           currentDateTime={currentDateTime}
           onDateTimeChange={dateTime => {
             //TODO: handle errors

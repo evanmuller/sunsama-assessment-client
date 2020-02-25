@@ -16,6 +16,7 @@ const CalendarMiniMap = ({ selectedDateTime, onDateTimeChange, ...props }) => {
 
   return (
     <CalendarList
+      current={selectedDayString}
       horizontal={true}
       pagingEnabled={true}
       calendarWidth={Dimensions.get("window").width}

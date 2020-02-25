@@ -1,4 +1,5 @@
 import React from "react";
+import { DateTime } from "luxon";
 import { StyleSheet, TouchableWithoutFeedback, View } from "react-native";
 import CalendarMiniMap from "./CalendarMiniMap";
 import MyAppText from "./MyAppText";
@@ -29,7 +30,12 @@ const styles = StyleSheet.create({
   },
 });
 
-const MoveTaskOverlay = ({ currentDateTime, onDateTimeChange, onClose }) => {
+const MoveTaskOverlay = ({
+  task,
+  currentDateTime,
+  onDateTimeChange,
+  onClose,
+}) => {
   return (
     <View style={styles.container}>
       <TouchableWithoutFeedback onPress={onClose}>
@@ -39,7 +45,15 @@ const MoveTaskOverlay = ({ currentDateTime, onDateTimeChange, onClose }) => {
         <MyAppText style={styles.startDateText}>Start date:</MyAppText>
         <CalendarMiniMap
           selectedDateTime={currentDateTime}
-          onDateTimeChange={onDateTimeChange}
+          onDateTimeChange={newDate => {
+            onDateTimeChange(
+              DateTime.fromISO(task.date).set({
+                year: newDate.get("year"),
+                month: newDate.get("month"),
+                day: newDate.get("day"),
+              }),
+            );
+          }}
         />
       </View>
     </View>
