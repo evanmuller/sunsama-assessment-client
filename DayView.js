@@ -182,16 +182,6 @@ const DayView = ({ currentDateTime, onDateTimeChange }) => {
     },
   );
 
-  // This is a little wonky. We have to refetch if the date changes
-  // because another client may have changed the tasks and we didn't
-  // catch it in subscription data.
-  useEffect(
-    () => {
-      refetch();
-    },
-    [currentDateTime],
-  );
-
   const subscribeToMoreTasks = useCallback(
     () =>
       subscribeToMore({
@@ -200,8 +190,8 @@ const DayView = ({ currentDateTime, onDateTimeChange }) => {
         updateQuery: (prev, { subscriptionData }) => {
           if (subscriptionData.data) {
             // Don't shut an open new task input on another device
-            // But do it here so there's no lag. There's a better way to do this.
-
+            // But do it here so there's no lag. I'm sure there's a
+            // better way to handle this
             if (newTaskPending.current) {
               setCreatingTask(false);
               newTaskPending.current = false;
@@ -244,6 +234,41 @@ const DayView = ({ currentDateTime, onDateTimeChange }) => {
       });
     },
     [setCreatingTask, currentDateTime],
+  );
+
+  const updateCacheForTasksOnDayMutation = useCallback(
+    (cache, taskData) => {
+      const queryData = {
+        query: tasksOnDayQuery,
+        variables: {
+          day: currentDateTime.toISO(),
+        },
+      };
+
+      const { tasksOnDay } = cache.readQuery(queryData);
+
+      const newTasksOnDay = updateTasksForNewSubscriptionData(
+        taskData,
+        currentDateTime,
+        tasksOnDay,
+      );
+
+      cache.writeQuery({
+        ...queryData,
+        data: { tasksOnDay: newTasksOnDay },
+      });
+    },
+    [tasksOnDayQuery, currentDateTime],
+  );
+
+  // This is a little wonky. The data has to be refetched if the date
+  // changes because another client may have changed the tasks and we didn't
+  // catch it in subscription data.
+  useEffect(
+    () => {
+      refetch();
+    },
+    [currentDateTime],
   );
 
   useEffect(
@@ -332,15 +357,38 @@ const DayView = ({ currentDateTime, onDateTimeChange }) => {
             }}
             onDelete={(task, rowRef) => {
               //TODO: handle errors
-              deleteTask({ variables: { id: task.id } }).then(response => {
-                console.log("Task Deleted", response);
-                rowRef.closeRowWithoutAnimation();
+              deleteTask({
+                variables: {
+                  id: task.id,
+                },
+                optimisticResponse: {
+                  __typename: "Mutation",
+                  deleteTask: true,
+                },
+                update: cache => {
+                  updateCacheForTasksOnDayMutation(cache, {
+                    task: task,
+                    mutation: "DELETED",
+                  });
+                },
+              }).then(response => {
+                console.log("Task Deleted", task.id, response);
               });
+
+              rowRef.closeRowWithoutAnimation();
             }}
             onComplete={task => {
               //TODO: handle errors
               updateTask({
                 variables: { id: task.id, complete: !task.complete },
+                optimisticResponse: {
+                  __typename: "Mutation",
+                  updateTask: {
+                    __typename: "Task",
+                    ...task,
+                    complete: !task.complete,
+                  },
+                },
               }).then(response => {
                 console.log("Task Updated", response);
               });
@@ -356,6 +404,20 @@ const DayView = ({ currentDateTime, onDateTimeChange }) => {
             //TODO: handle errors
             updateTask({
               variables: { id: movingTask.id, date: dateTime.toISO() },
+              optimisticResponse: {
+                __typename: "Mutation",
+                updateTask: {
+                  __typename: "Task",
+                  ...movingTask,
+                  date: dateTime,
+                },
+              },
+              update: (cache, { data: { updateTask } }) => {
+                updateCacheForTasksOnDayMutation(cache, {
+                  task: updateTask,
+                  mutation: "UPDATED",
+                });
+              },
             }).then(response => {
               console.log("Task Moved", response);
             });

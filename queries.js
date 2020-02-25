@@ -30,6 +30,11 @@ export const createTaskMutation = gql`
   mutation($name: String, $date: DateTime!) {
     createTask(name: $name, date: $date) {
       id
+      name
+      date
+      complete
+      notes
+      timeAllotment
     }
   }
 `;
@@ -52,6 +57,11 @@ export const updateTaskMutation = gql`
       timeAllotment: $timeAllotment
     ) {
       id
+      name
+      date
+      complete
+      notes
+      timeAllotment
     }
   }
 `;
