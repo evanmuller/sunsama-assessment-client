@@ -1,6 +1,11 @@
 import React from "react";
 import { DateTime } from "luxon";
-import { StyleSheet, TouchableWithoutFeedback, View } from "react-native";
+import {
+  Platform,
+  StyleSheet,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
 import CalendarMiniMap from "./CalendarMiniMap";
 import MyAppText from "./MyAppText";
 
@@ -13,6 +18,12 @@ const styles = StyleSheet.create({
     left: 0,
     backgroundColor: "rgba(0, 0, 0, .1)",
     justifyContent: "flex-end",
+
+    ...Platform.select({
+      android: {
+        elevation: 1,
+      },
+    }),
   },
   calendarContainer: {
     backgroundColor: "white",
@@ -46,13 +57,19 @@ const MoveTaskOverlay = ({
         <CalendarMiniMap
           selectedDateTime={currentDateTime}
           onDateTimeChange={newDate => {
-            onDateTimeChange(
-              DateTime.fromISO(task.date).set({
-                year: newDate.get("year"),
-                month: newDate.get("month"),
-                day: newDate.get("day"),
-              }),
+            const currentTaskDateTime = DateTime.fromISO(task.date).toUTC();
+
+            const newTaskDateTime = DateTime.utc(
+              newDate.get("year"),
+              newDate.get("month"),
+              newDate.get("day"),
+              currentTaskDateTime.get("hour"),
+              currentTaskDateTime.get("minute"),
+              currentTaskDateTime.get("second"),
+              currentTaskDateTime.get("millisecond"),
             );
+
+            onDateTimeChange(newTaskDateTime);
           }}
         />
       </View>
