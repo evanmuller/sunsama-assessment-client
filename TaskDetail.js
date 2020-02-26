@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
   },
   completeButton: {
     padding: 10,
-    marginTop: -12,
+    marginTop: -10,
     marginLeft: -10,
   },
   completeCheck: {
