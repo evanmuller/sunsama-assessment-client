@@ -57,9 +57,9 @@ const MoveTaskOverlay = ({
         <CalendarMiniMap
           selectedDateTime={currentDateTime}
           onDateTimeChange={newDate => {
-            const currentTaskDateTime = DateTime.fromISO(task.date).toUTC();
+            const currentTaskDateTime = DateTime.fromISO(task.date);
 
-            const newTaskDateTime = DateTime.utc(
+            const newTaskDateTime = DateTime.local(
               newDate.get("year"),
               newDate.get("month"),
               newDate.get("day"),
