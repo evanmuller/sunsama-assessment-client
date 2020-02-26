@@ -8,7 +8,16 @@ import {
   View,
   TextInput,
 } from "react-native";
-import { indexOf, pluck, remove, lensIndex, set, sort } from "ramda";
+import {
+  clone,
+  omit,
+  indexOf,
+  pluck,
+  remove,
+  lensIndex,
+  set,
+  sort,
+} from "ramda";
 import { useMutation, useQuery } from "@apollo/react-hooks";
 import {
   createTaskMutation,
@@ -23,6 +32,7 @@ import DateHeader from "./DateHeader";
 import MyAppText from "./MyAppText";
 import TaskSwipeListView from "./TaskSwipeListView";
 import MoveTaskOverlay from "./MoveTaskOverlay";
+import TaskDetail from "./TaskDetail";
 
 const sortTasks = sort((taskA, taskB) => {
   if (taskA.complete === taskB.complete) {
@@ -162,7 +172,7 @@ const styles = StyleSheet.create({
     color: "rgba(0, 0, 0, .6)",
   },
   incompleteCheck: {
-    fontSize: 32, // this should be 42 at a minimum, but it looks bad
+    fontSize: 32,
     color: "rgba(0, 0, 0, .3)",
     flex: 0,
   },
@@ -175,6 +185,7 @@ const DayView = ({ currentDateTime, onDateTimeChange }) => {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [creatingTask, setCreatingTask] = useState(false);
   const [movingTask, setMovingTask] = useState(null);
+  const [openTask, setOpenTask] = useState(null);
   const newTaskNameInputRef = useRef(null);
   const newTaskPending = useRef(false);
   const moveTaskRowRef = useRef(null);
@@ -358,7 +369,9 @@ const DayView = ({ currentDateTime, onDateTimeChange }) => {
 
           <TaskSwipeListView
             data={sortTasks(data.tasksOnDay)}
-            onPress={task => console.log("on press task", task)}
+            onPress={task => {
+              setOpenTask(task);
+            }}
             onMove={(task, rowRef) => {
               moveTaskRowRef.current = rowRef;
               setMovingTask(task);
@@ -437,6 +450,31 @@ const DayView = ({ currentDateTime, onDateTimeChange }) => {
           onClose={() => {
             moveTaskRowRef.current.closeRowWithoutAnimation();
             setMovingTask(null);
+          }}
+        />
+      )}
+
+      {openTask && (
+        <TaskDetail
+          taskData={omit(["key", "__typename"], clone(openTask))}
+          onClose={() => setOpenTask(null)}
+          onUpdate={task => {
+            console.log("update the task", task);
+
+            updateTask({
+              variables: {
+                ...task,
+              },
+              optimisticResponse: {
+                __typename: "Mutation",
+                updateTask: {
+                  __typename: "Task",
+                  ...task,
+                },
+              },
+            }).then(response => {
+              console.log("Task Updated", response);
+            });
           }}
         />
       )}
