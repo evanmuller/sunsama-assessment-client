@@ -8,6 +8,7 @@ import {
   TextInput,
   View,
   TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import FontAwesome, {
   RegularIcons,
@@ -224,7 +225,10 @@ const TaskDetail = ({ taskData, onClose, onUpdate }) => {
           />
           <View style={styles.timeAllotmentRow}>
             <TouchableWithoutFeedback
-              onPress={() => setShowTimeAllotmentChooser(true)}
+              onPress={() => {
+                Keyboard.dismiss();
+                setShowTimeAllotmentChooser(true);
+              }}
             >
               <View style={styles.timeAllotmentButton}>
                 {task.timeAllotment ? (
