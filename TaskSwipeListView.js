@@ -42,7 +42,8 @@ const styles = StyleSheet.create({
       },
     }),
 
-    padding: 20,
+    padding: 18,
+    paddingBottom: 12,
 
     marginTop: 4,
     marginBottom: 4,
@@ -75,13 +76,18 @@ const styles = StyleSheet.create({
   rowBackText: {
     color: "white",
   },
+  completeButton: {
+    padding: 8,
+    marginLeft: -8,
+    marginTop: -8,
+  },
   completeCheck: {
-    fontSize: 32, // this should be 42 at a minimum, but it looks bad
+    fontSize: 24,
     color: completeColor,
     flex: 0,
   },
   incompleteCheck: {
-    fontSize: 32, // this should be 42 at a minimum, but it looks bad
+    fontSize: 24,
     color: "rgba(0, 0, 0, .3)",
     flex: 0,
   },
@@ -163,25 +169,30 @@ const TaskSwipeListView = ({ data, onMove, onDelete, onPress, onComplete }) => {
                 Delete
               </Text>
             </View>
-            <TouchableWithoutFeedback onPress={() => onPress(item)}>
+            <TouchableWithoutFeedback
+              disabled={item.complete}
+              onPress={() => onPress(item)}
+            >
               <View
                 style={[styles.rowFront, item.complete ? { opacity: 0.6 } : {}]}
               >
                 <MyAppText style={styles.rowFrontText}>{item.name}</MyAppText>
                 <View style={styles.actionRow}>
-                  <TouchableWithoutFeedback onPress={() => onComplete(item)}>
-                    {item.complete ? (
-                      <FontAwesome
-                        icon={SolidIcons.checkCircle}
-                        style={styles.completeCheck}
-                      />
-                    ) : (
-                      <FontAwesome
-                        icon={RegularIcons.checkCircle}
-                        style={styles.incompleteCheck}
-                      />
-                    )}
-                  </TouchableWithoutFeedback>
+                  <View style={styles.completeButton}>
+                    <TouchableWithoutFeedback onPress={() => onComplete(item)}>
+                      {item.complete ? (
+                        <FontAwesome
+                          icon={SolidIcons.checkCircle}
+                          style={styles.completeCheck}
+                        />
+                      ) : (
+                        <FontAwesome
+                          icon={RegularIcons.checkCircle}
+                          style={styles.incompleteCheck}
+                        />
+                      )}
+                    </TouchableWithoutFeedback>
+                  </View>
                 </View>
               </View>
             </TouchableWithoutFeedback>
