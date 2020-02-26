@@ -154,7 +154,8 @@ const styles = StyleSheet.create({
       },
     }),
 
-    padding: 20,
+    padding: 18,
+    paddingBottom: 20,
 
     marginTop: 4,
     marginBottom: 4,
@@ -172,7 +173,7 @@ const styles = StyleSheet.create({
     color: "rgba(0, 0, 0, .6)",
   },
   incompleteCheck: {
-    fontSize: 32,
+    fontSize: 24,
     color: "rgba(0, 0, 0, .3)",
     flex: 0,
   },
